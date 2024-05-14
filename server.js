@@ -1,0 +1,7 @@
+const express=require('express')
+const dotenv=require('dotenv')
+dotenv.config()
+const dbConnection=require('./config/dbConfig')
+const app=express()
+dbConnection().then(()=>console.log('hello from mongoose')).catch((error)=>console.log('error in db'+error.message))
+app.listen(9000,()=>console.log('hello from backend'))
