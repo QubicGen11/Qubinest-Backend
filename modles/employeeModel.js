@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
+
 const employeeSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required:true
+      required: true,
     },
     email: {
       type: String,
@@ -14,20 +15,18 @@ const employeeSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-     isAdmin:{
-      type:Boolean,
-      required:true
-     },
+    isAdmin: {
+      type: Boolean,
+      required: true,
+    },
     department: {
       type: String,
-     
     },
     position: {
       type: String,
     },
     dateOfBirth: {
       type: Date,
-       
     },
     address: {
       street: String,
@@ -38,7 +37,6 @@ const employeeSchema = new mongoose.Schema(
     },
     phoneNumber: {
       type: String,
-    
     },
     dateOfJoining: {
       type: Date,
@@ -52,5 +50,7 @@ const employeeSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
 const Employee = mongoose.model("Employee", employeeSchema);
+
 module.exports = Employee;
