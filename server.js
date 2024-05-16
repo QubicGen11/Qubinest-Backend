@@ -9,7 +9,7 @@ const userRouter=require('./routes/userRouter')
  
 const port=process.env.PORT
 app.use(cors())
- 
+ app.use(cookieParser())
 app.use(express.json())
 app.use('/qubinest',userRouter)
 dbConnection().then(()=>console.log('hello from mongoose')).catch((error)=>console.log('error in db'+error.message))
