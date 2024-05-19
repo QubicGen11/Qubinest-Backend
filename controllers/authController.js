@@ -1,72 +1,52 @@
-const Employee = require('../modles/employeeModel');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = process.env.secretToken;
-
-const registerUser = async (req, res) => {
+const Employee=require('../models/employeModel')
+const bcrypt=require('bcrypt')
+const salt=10
+const jwt=require('jsonwebtoken')
+const jwtSecret=process.env.jwtSecret
+const employeeRegister=async(req,res)=>{
     try {
-        const { name, email, password } = req.body;
+        const {name,email,password,isAdmin}=req.body
+        const existingUser=await Employee.findOne({email})
 
-        const existingUser = await Employee.findOne({ email });
-        if (existingUser) {
-            return res.status(400).send('User is already present');
+        if(existingUser){
+            return res.status(400).send('Employee is already present please login')
         }
+        const hashedPassword=await bcrypt.hash(password, salt)
+        const newUser=new Employee({name,email,password:hashedPassword,isAdmin})
+        await newUser.save()
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new Employee({
-            name,
-            email,
-            password: hashedPassword
-        });
-
-        const createdUser = await newUser.save();
-        res.status(201).send(createdUser);
+        return res.status(200).send(newUser)
     } catch (error) {
-        console.error(error);
-        res.status(500).send('An error occurred while registering the user');
+        return res.status(500).send('internal error'+error.message)
     }
-};
-
-const loginUser = async (req, res) => {
+}
+const employeeLogin = async (req, res) => {
     try {
-        const { email, password } = req.body;
-
-        const existingUser = await Employee.findOne({ email });
-        if (!existingUser) {
-            return res.status(400).send('Invalid email or password');
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, existingUser.password);
-        if (!isPasswordValid) {
-            return res.status(400).send('Invalid email or password');
-        }
-
-        const token = jwt.sign({ id: existingUser._id }, JWT_SECRET, { expiresIn: '1h' });
-
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 3600000
-        });
-
-        res.status(200).send({ message: 'Login successful', user: existingUser });
+      const { email, password } = req.body;
+  
+      // Find the user by email
+      const isUser = await Employee.findOne({ email });
+      if (!isUser) {
+        return res.status(400).send('Please register if you are new');
+      }
+  
+      // Check if the password matches
+      const isMatch = await bcrypt.compare(password, isUser.password);
+      if (!isMatch) {
+        return res.status(400).send('Password is not correct');
+      }
+  
+      // Create a JWT token
+      const token = jwt.sign({ id: isUser._id, email: isUser.email, isAdmin: isUser.isAdmin }, jwtSecret, { expiresIn: '1d' });
+  
+      // Set the cookie with the token
+      res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'strict' });
+  
+      // Send success response
+      res.status(200).send('Login successful');
     } catch (error) {
-        console.error(error);
-        res.status(500).send('An error occurred while logging in');
+      res.status(500).send('Internal error: ' + error.message);
     }
-};
-const logoutUser = (req, res) => {
-    try {
-        res.clearCookie('token', {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production'
-        });
-        res.status(200).send({ message: 'Logout successful' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('An error occurred while logging out');
-    }
-};
+  };
+module.exports={employeeLogin,employeeRegister}
 
-module.exports = { registerUser, loginUser,logoutUser };
