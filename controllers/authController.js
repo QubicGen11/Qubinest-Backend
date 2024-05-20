@@ -1,52 +1,83 @@
-const Employee=require('../models/employeModel')
-const bcrypt=require('bcrypt')
-const salt=10
-const jwt=require('jsonwebtoken')
+const User = require('../models/userModel');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const jwtSecret=process.env.jwtSecret
-const employeeRegister=async(req,res)=>{
+const userRegister = async (req, res) => {
     try {
-        const {name,email,password,isAdmin}=req.body
-        const existingUser=await Employee.findOne({email})
+        // Extract user details from request body
+        const { username, password } = req.body;
 
-        if(existingUser){
-            return res.status(400).send('Employee is already present please login')
+       
+   
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ username });
+       
+
+        if (existingUser) {
+            return res.status(400).json({ message: 'User already exists' });
         }
-        const hashedPassword=await bcrypt.hash(password, salt)
-        const newUser=new Employee({name,email,password:hashedPassword,isAdmin})
-        await newUser.save()
 
-        return res.status(200).send(newUser)
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create a new user
+        const newUser = new User({
+            username,
+            password: hashedPassword // Store the hashed password
+        });
+
+        // Save the user to the database
+        await newUser.save();
+
+        // Generate JWT token
+        const token = jwt.sign({ userId: newUser._id }, jwtSecret, { expiresIn: '1d' });
+
+        // Set cookie with JWT token
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
+        });
+
+        // Send success response
+        res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
-        return res.status(500).send('internal error'+error.message)
+        console.error('Error registering user:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
-}
-const employeeLogin = async (req, res) => {
-    try {
-      const { email, password } = req.body;
-  
-      // Find the user by email
-      const isUser = await Employee.findOne({ email });
-      if (!isUser) {
-        return res.status(400).send('Please register if you are new');
+};
+const userLogin = async (req, res) => {
+  try {
+      // Extract user credentials from request body
+      const { username, password } = req.body;
+
+      // Find user by username
+      const user = await User.findOne({ username });
+      if (!user) {
+          return res.status(401).json({ message: 'Invalid username or password' });
       }
-  
-      // Check if the password matches
-      const isMatch = await bcrypt.compare(password, isUser.password);
-      if (!isMatch) {
-        return res.status(400).send('Password is not correct');
+
+      // Check if the password is correct
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      if (!passwordMatch) {
+          return res.status(401).json({ message: 'Invalid username or password' });
       }
-  
-      // Create a JWT token
-      const token = jwt.sign({ id: isUser._id, email: isUser.email, isAdmin: isUser.isAdmin }, jwtSecret, { expiresIn: '1d' });
-  
-      // Set the cookie with the token
-      res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'strict' });
-  
+
+      // Generate JWT token
+      const token = jwt.sign({ userId: user._id }, jwtSecret, { expiresIn: '1d' });
+
+      // Set cookie with JWT token
+      res.cookie('jwt', token, {
+          httpOnly: true,
+          maxAge: 24 * 60 * 60 * 1000 
+      });
+
       // Send success response
-      res.status(200).send('Login successful');
-    } catch (error) {
-      res.status(500).send('Internal error: ' + error.message);
-    }
-  };
-module.exports={employeeLogin,employeeRegister}
+      res.status(200).json({ message: 'Login successful', user: { username: user.username } });
+  } catch (error) {
+      console.error('Error logging in:', error);
+      res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
+module.exports={userRegister,userLogin}
