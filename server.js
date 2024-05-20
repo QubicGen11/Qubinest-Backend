@@ -11,6 +11,12 @@ app.use(cors())
 app.use(cookieParser())
 app.use(express.json())
 app.use('/qubinest',authRouter)
+
+app.get('/test', (req, res) => {
+    res.send('Hello World! This is a test')
+  })
+
+  
  
 dbConnection().then(()=>console.log('hello from mongoose')).catch((error)=>console.log('error in db'+error.message))
 app.listen(port,()=>console.log(`listening from port ${port}`))
