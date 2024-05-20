@@ -1,4 +1,5 @@
 const mongoose=require('mongoose')
+const Employee=require('../models/employeeModel')
 const attendanceSchema = new Schema({
     attendance_id: {
         type: Schema.Types.ObjectId,
