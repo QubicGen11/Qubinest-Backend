@@ -6,14 +6,8 @@ const userRegister = async (req, res) => {
     try {
         // Extract user details from request body
         const { username, password } = req.body;
-
-       
-   
-
         // Check if user already exists
         const existingUser = await User.findOne({ username });
-       
-
         if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
         }
