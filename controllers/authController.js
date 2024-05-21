@@ -1,14 +1,16 @@
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const Session=require('../models/sessionModel')
 const jwtSecret=process.env.jwtSecret
+const generateSessionId=require('../middlewares/sessionIdGenerator')
+
 const userRegister = async (req, res) => {
     try {
         // Extract user details from request body
         const { username, password } = req.body;
         // Check if user already exists
         const existingUser = await User.findOne({ username });
-       
 
         if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
@@ -42,38 +44,75 @@ const userRegister = async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
 const userLogin = async (req, res) => {
-  try {
-      // Extract user credentials from request body
-      const { username, password } = req.body;
+    try {
+        // Extract user credentials from request body
+        const { username, password } = req.body;
+  
+        // Find user by username
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
+  
+        // Check if the password is correct
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) {
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
+  
+        // Generate JWT token
+        const token = jwt.sign({ userId: user._id }, jwtSecret, { expiresIn: '1d' });
+  
+        // Set cookie with JWT token
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000 
+        });
+  
+        // Generate random session ID
+        const sessionId = generateSessionId();
+  
+        // Save session ID in the database
+        const session = new Session({
+            sessionId,
+            username:user.username
+        });
+        await session.save();
+        console.log(session.sessionId)
+        // Set cookie with session ID
+        res.cookie('sessionId', sessionId, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000 
+        });
+        res.setHeader('sessionId',sessionId)
+        // Send success response
+        res.status(200).json({ message: 'Login successful', user: { username: user.username } });
+    } catch (error) {
+        console.error('Error logging in:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+  const logout = async (req, res) => {
+    try {
+        // Retrieve session ID from cookies
+        const sessionId = req.cookies.sessionId;
+        
+        // Clear JWT token cookie
+        res.clearCookie('jwt');
+        
+        // Clear session ID cookie
+        res.clearCookie('sessionId');
 
-      // Find user by username
-      const user = await User.findOne({ username });
-      if (!user) {
-          return res.status(401).json({ message: 'Invalid username or password' });
-      }
+        // Remove session from the database
+        await Session.findOneAndDelete({ sessionId });
 
-      // Check if the password is correct
-      const passwordMatch = await bcrypt.compare(password, user.password);
-      if (!passwordMatch) {
-          return res.status(401).json({ message: 'Invalid username or password' });
-      }
-
-      // Generate JWT token
-      const token = jwt.sign({ userId: user._id }, jwtSecret, { expiresIn: '1d' });
-
-      // Set cookie with JWT token
-      res.cookie('jwt', token, {
-          httpOnly: true,
-          maxAge: 24 * 60 * 60 * 1000 
-      });
-
-      // Send success response
-      res.status(200).json({ message: 'Login successful', user: { username: user.username } });
-  } catch (error) {
-      console.error('Error logging in:', error);
-      res.status(500).json({ message: 'Internal server error' });
-  }
+        // Send success response
+        res.status(200).json({ message: 'Logout successful' });
+    } catch (error) {
+        console.error('Error logging out:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 };
-
-module.exports={userRegister,userLogin}
+ module.exports={userLogin,userRegister,logout,generateSessionId}

@@ -1,15 +1,15 @@
 const mongoose=require('mongoose')
 const Employee=require('../models/employeeModel')
+const Schema=mongoose.Schema
 const attendanceSchema = new Schema({
     attendance_id: {
         type: Schema.Types.ObjectId,
         default: () => new mongoose.Types.ObjectId(),
         index: true
     },
-    employee_id: {
-        type: Schema.Types.ObjectId,
-        ref: 'Employee',
-        required: true
+    username:{
+        type:String,
+        required:true
     },
     date: {
         type: Date,
@@ -26,6 +26,7 @@ const attendanceSchema = new Schema({
     status: {
         type: String,
         enum: ['Present', 'Absent', 'Leave'],
+        default:'present',
         required: true
     },
     created_at: {
