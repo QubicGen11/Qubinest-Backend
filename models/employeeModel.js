@@ -37,6 +37,11 @@ const employeeSchema = new Schema({
         required: true,
         unique: true
     },
+    status:{
+        type:String,
+        enum:["active","disabled"],
+    }
+    ,
     hire_date: {
         type: Date,
         default: Date.now

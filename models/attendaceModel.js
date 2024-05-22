@@ -25,8 +25,8 @@ const attendanceSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['Present', 'Absent', 'Leave'],
-        default:'present',
+        enum: ['Approved',"Pending"],
+        default:'Pending',
         required: true
     },
     created_at: {
