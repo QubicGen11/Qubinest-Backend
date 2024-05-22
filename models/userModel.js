@@ -4,7 +4,6 @@ const userSchema = new Schema({
     username: {
         type: String,
         required: true,
-       
     },
     password: {
         type: String,
@@ -12,8 +11,8 @@ const userSchema = new Schema({
     },
     role: {
         type: String,
-        enum: ['admin', 'employee', 'intern',"manager"],
-        default: 'employee'
+        enum: ['Admin', 'Employee', 'Intern',"Manager"],
+        default: 'Employee'
     },
     created_at: {
         type: Date,
@@ -25,7 +24,6 @@ const userSchema = new Schema({
     }
 });
 
- 
 
 const User=mongoose.model('User',userSchema)
 module.exports=User

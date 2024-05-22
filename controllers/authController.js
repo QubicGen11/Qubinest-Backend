@@ -8,7 +8,7 @@ const generateSessionId=require('../middlewares/sessionIdGenerator')
 const userRegister = async (req, res) => {
     try {
         // Extract user details from request body
-        const { username, password } = req.body;
+        const { username, password, role } = req.body;
         // Check if user already exists
         const existingUser = await User.findOne({ username });
 
@@ -22,7 +22,8 @@ const userRegister = async (req, res) => {
         // Create a new user
         const newUser = new User({
             username,
-            password: hashedPassword // Store the hashed password
+            password: hashedPassword,
+            role // Store the role
         });
 
         // Save the user to the database
@@ -44,12 +45,11 @@ const userRegister = async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 };
-
 const userLogin = async (req, res) => {
     try {
         // Extract user credentials from request body
         const { username, password } = req.body;
-  
+        console.log(username)
         // Find user by username
         const user = await User.findOne({ username });
         if (!user) {
@@ -98,13 +98,10 @@ const userLogin = async (req, res) => {
     try {
         // Retrieve session ID from cookies
         const sessionId = req.cookies.sessionId;
-        
         // Clear JWT token cookie
         res.clearCookie('jwt');
-        
         // Clear session ID cookie
         res.clearCookie('sessionId');
-
         // Remove session from the database
         await Session.findOneAndDelete({ sessionId });
 
