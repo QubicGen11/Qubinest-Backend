@@ -1,115 +1,97 @@
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const Session=require('../models/sessionModel')
-const jwtSecret=process.env.jwtSecret
-const generateSessionId=require('../middlewares/sessionIdGenerator')
+const Session = require('../models/sessionModel');
+const jwtSecret = process.env.jwtSecret;
 
 const userRegister = async (req, res) => {
     try {
-        // Extract user details from request body
         const { username, password, role } = req.body;
-        // Check if user already exists
         const existingUser = await User.findOne({ username });
 
         if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create a new user
         const newUser = new User({
             username,
             password: hashedPassword,
-            role // Store the role
+            role
         });
 
-        // Save the user to the database
         await newUser.save();
 
-        // Generate JWT token
         const token = jwt.sign({ userId: newUser._id }, jwtSecret, { expiresIn: '1d' });
 
-        // Set cookie with JWT token
         res.cookie('jwt', token, {
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
 
-        // Send success response
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
         console.error('Error registering user:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
 const userLogin = async (req, res) => {
     try {
-        // Extract user credentials from request body
         const { username, password } = req.body;
-        console.log(username)
-        // Find user by username
         const user = await User.findOne({ username });
+
         if (!user) {
             return res.status(401).json({ message: 'Invalid username or password' });
         }
-  
-        // Check if the password is correct
+
         const passwordMatch = await bcrypt.compare(password, user.password);
+
         if (!passwordMatch) {
             return res.status(401).json({ message: 'Invalid username or password' });
         }
-  
-        // Generate JWT token
+
         const token = jwt.sign({ userId: user._id }, jwtSecret, { expiresIn: '1d' });
-  
-        // Set cookie with JWT token
+
         res.cookie('jwt', token, {
             httpOnly: true,
-            maxAge: 24 * 60 * 60 * 1000 
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
-  
-        // Generate random session ID
-        const sessionId = generateSessionId();
-  
-        // Save session ID in the database
+
         const session = new Session({
-            sessionId,
-            username:user.username
+            username: user.username,
+            userId: user._id,
+            isAuth: true
         });
+
         await session.save();
-        console.log(session.sessionId)
-        // Set cookie with session ID
-        res.cookie('sessionId', sessionId, {
+
+        res.cookie('sessionId', session._id.toString(), {
             httpOnly: true,
-            maxAge: 24 * 60 * 60 * 1000 
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
-        res.setHeader('sessionId',sessionId)
-        // Send success response
+
         res.status(200).json({ message: 'Login successful', user: { username: user.username } });
     } catch (error) {
         console.error('Error logging in:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
-  };
-  const logout = async (req, res) => {
-    try {
-        // Retrieve session ID from cookies
-        const sessionId = req.cookies.sessionId;
-        // Clear JWT token cookie
-        res.clearCookie('jwt');
-        // Clear session ID cookie
-        res.clearCookie('sessionId');
-        // Remove session from the database
-        await Session.findOneAndDelete({ sessionId });
+};
 
-        // Send success response
+const logout = async (req, res) => {
+    try {
+        const sessionId = req.cookies.sessionId;
+
+        res.clearCookie('jwt');
+        res.clearCookie('sessionId');
+
+        await Session.findByIdAndDelete(sessionId);
+
         res.status(200).json({ message: 'Logout successful' });
     } catch (error) {
         console.error('Error logging out:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
- module.exports={userLogin,userRegister,logout,generateSessionId}
+
+module.exports = { userRegister, userLogin, logout };

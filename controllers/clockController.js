@@ -1,27 +1,35 @@
-const Attendance=require('../models/attendaceModel')
-const User=require('../models/userModel')
-const Session=require('../models/sessionModel')
-const generateSessionId=require('../middlewares/sessionIdGenerator')
+const Attendance = require('../models/attendaceModel');
+const Session = require('../models/sessionModel');
+
 const clockIn = async (req, res) => {
     try {
-        const sessionCreds = req.cookies.sessionId;
-        const session = await Session.findOne({ sessionId: sessionCreds });
-        if (!session) {
+        const sessionId = req.cookies.sessionId;
+        const session = await Session.findById(sessionId);
+
+        if (!session || !session.isAuth) {
             return res.status(400).send('User is not authenticated');
         }
+
         const { username } = session;
-        const date = new Date(); // Current date
-        date.setHours(0, 0, 0, 0); // Set to the start of the day
+        const date = new Date();
+        date.setHours(0, 0, 0, 0);
 
         const check_in_time = new Date();
 
-        // Create a new attendance record with clock-in details
+        // Check if user already clocked in today
+        const existingAttendance = await Attendance.findOne({ username, date });
+        if (existingAttendance) {
+            return res.status(400).send('User already clocked in for today');
+        }
+
+        // Create a new attendance record
         const attendance = new Attendance({
             username,
             date,
             check_in_time,
-            status: 'Present'
+            status: 'Pending'
         });
+
         await attendance.save();
         res.status(200).json({ message: 'Clock-in successful', attendance });
     } catch (error) {
@@ -32,28 +40,27 @@ const clockIn = async (req, res) => {
 
 const clockOut = async (req, res) => {
     try {
-        const sessionCreds = req.cookies.sessionId;
+        const sessionId = req.cookies.sessionId;
+        const session = await Session.findById(sessionId);
 
-        // Check if the session ID exists in the session model
-        const session = await Session.findOne({ sessionId: sessionCreds });
-        if (!session) {
+        if (!session || !session.isAuth) {
             return res.status(400).send('User is not authenticated');
         }
 
         const { username } = session;
-        const date = new Date(); // Current date
-        date.setHours(0, 0, 0, 0); // Set to the start of the day
+        const date = new Date();
+        date.setHours(0, 0, 0, 0);
 
         const check_out_time = new Date();
 
-        // Find the attendance record for today without check-out time
+        // Find the attendance record for today without a check-out time
         const attendance = await Attendance.findOne({ username, date, check_out_time: { $exists: false } });
 
         if (!attendance) {
             return res.status(404).json({ message: 'Clock-in record not found. Please clock in before clocking out.' });
         }
 
-        // Update the attendance record with check-out time
+        // Update the attendance record with the check-out time
         attendance.check_out_time = check_out_time;
         attendance.updated_at = new Date();
 
@@ -66,4 +73,4 @@ const clockOut = async (req, res) => {
     }
 };
 
-module.exports={clockIn,clockOut}
+module.exports = { clockIn, clockOut };
