@@ -7,14 +7,20 @@ const app=express()
 const cors=require('cors')
 const authRouter=require('./routes/authRouter')
 const attendanceRouter=require('./routes/clockRouter')
+const timeSheetRouter=require('./routes/attendanceRouter')
 const bodyparser=require('body-parser')
 const port=process.env.PORT
-app.use(cors())
+const corsOptions = {
+    origin: 'http://localhost:5174', // Your React app's origin
+    credentials: true, // This is required to allow credentials (cookies, headers)
+  };
+app.use(cors(corsOptions))
 app.use(cookieParser())
 app.use(express.json())
 app.use('/qubinest',authRouter)
 app.use('/qubinest',attendanceRouter)
-app.use(bodyparser())
+app.use('/qubinest',timeSheetRouter)
+ 
 app.get('/test', (req, res) => {
     res.send('Hello World! This is a test')
 })
