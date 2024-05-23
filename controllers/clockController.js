@@ -3,8 +3,9 @@ const Session = require('../models/sessionModel');
 
 const clockIn = async (req, res) => {
     try {
-        const username = req.body;
-        const existingSession=await Session.findOne({username})
+        const { username } = req.body;
+        const existingSession = await Session.findOne({ username });
+
         if (!existingSession) {
             return res.status(400).send('User is not authenticated');
         }
@@ -25,7 +26,7 @@ const clockIn = async (req, res) => {
             username,
             date,
             check_in_time,
-            status: 'Pending'
+            status: 'Present'
         });
 
         await attendance.save();
@@ -38,17 +39,19 @@ const clockIn = async (req, res) => {
 
 const clockOut = async (req, res) => {
     try {
-        const username = req.body;
-        const existingSession=await Session.findOne({username})
-        if(!existingSession){
-            return res.status(400).send('user is not authenticated')
+        const { username } = req.body;
+        const existingSession = await Session.findOne({ username });
+
+        if (!existingSession) {
+            return res.status(400).send('User is not authenticated');
         }
+
         const date = new Date();
         date.setHours(0, 0, 0, 0);
         const check_out_time = new Date();
 
         // Find the attendance record for today without a check-out time
-        const attendance = await Attendance.findOne({ username});
+        const attendance = await Attendance.findOne({ username, date });
 
         if (!attendance) {
             return res.status(404).json({ message: 'Clock-in record not found. Please clock in before clocking out.' });

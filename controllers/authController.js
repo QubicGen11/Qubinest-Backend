@@ -51,6 +51,13 @@ const userLogin = async (req, res) => {
             return res.status(401).json({ message: 'Invalid username or password' });
         }
 
+        // Create a new session
+        const session = new Session({
+            username,
+            userId: user._id
+        });
+        await session.save();
+
         const token = jwt.sign({ userId: user._id }, jwtSecret, { expiresIn: '1d' });
 
         res.cookie('jwt', token, {
