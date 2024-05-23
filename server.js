@@ -11,10 +11,12 @@ const timeSheetRouter=require('./routes/attendanceRouter')
 const bodyparser=require('body-parser')
 const port=process.env.PORT
 const corsOptions = {
-    origin: 'http://localhost:5174', // Your React app's origin
-    credentials: true, // This is required to allow credentials (cookies, headers)
-  };
-app.use(cors(corsOptions))
+  origin: 'http://localhost:5173',
+  credentials: true, // This is required to allow credentials (cookies, headers)
+};
+
+app.use(cors(corsOptions));
+
 app.use(cookieParser())
 app.use(express.json())
 app.use('/qubinest',authRouter)
