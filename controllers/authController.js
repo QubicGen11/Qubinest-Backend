@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const Session = require('../models/sessionModel');
 const jwtSecret = process.env.jwtSecret;
-
 const userRegister = async (req, res) => {
     try {
         const { username, password, role } = req.body;

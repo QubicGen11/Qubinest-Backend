@@ -1,15 +1,15 @@
-const mongoose=require('mongoose')
-const Employee=require('../models/employeeModel')
-const Schema=mongoose.Schema
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
 const attendanceSchema = new Schema({
     attendance_id: {
         type: Schema.Types.ObjectId,
         default: () => new mongoose.Types.ObjectId(),
         index: true
     },
-    username:{
-        type:String,
-        required:true
+    username: {
+        type: String,
+        required: true
     },
     date: {
         type: Date,
@@ -25,8 +25,8 @@ const attendanceSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['Approved',"Pending"],
-        default:'Pending',
+        enum: ['Approved', 'Pending', 'Present'],
+        default: 'Pending',
         required: true
     },
     created_at: {
@@ -38,5 +38,6 @@ const attendanceSchema = new Schema({
         default: Date.now
     }
 });
-const Attendace=mongoose.model('Attendance',attendanceSchema)
-module.exports=Attendace
+
+const Attendance = mongoose.model('Attendance', attendanceSchema);
+module.exports = Attendance;

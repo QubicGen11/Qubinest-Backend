@@ -26,7 +26,7 @@ const clockIn = async (req, res) => {
             username,
             date,
             check_in_time,
-            status: 'Present'
+            status: 'Approved' // Changed to match the enum in the model
         });
 
         await attendance.save();
