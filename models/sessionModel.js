@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const sessionSchema = new mongoose.Schema({
     username: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     isAuth: {
         type: Boolean,

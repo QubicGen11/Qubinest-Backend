@@ -58,15 +58,7 @@ const userLogin = async (req, res) => {
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
 
-        const session = new Session({
-            username: user.username,
-            userId: user._id,
-            isAuth: true
-        });
-
-        await session.save();
-
-        res.cookie('sessionId', session._id.toString(), {
+        res.cookie('username', username, {
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
@@ -80,13 +72,13 @@ const userLogin = async (req, res) => {
 
 const logout = async (req, res) => {
     try {
-        const sessionId = req.cookies.sessionId;
+        const username = req.cookies.username;
 
         res.clearCookie('jwt');
-        res.clearCookie('sessionId');
+        res.clearCookie('username');
 
-        await Session.findByIdAndDelete(sessionId);
-
+        await Session.findOneAndDelete({ username });
+        
         res.status(200).json({ message: 'Logout successful' });
     } catch (error) {
         console.error('Error logging out:', error);
