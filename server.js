@@ -7,13 +7,14 @@ const app=express()
 const cors=require('cors')
 const authRouter=require('./routes/authRouter')
 const attendanceRouter=require('./routes/clockRouter')
+const bodyparser=require('body-parser')
 const port=process.env.PORT
 app.use(cors())
 app.use(cookieParser())
 app.use(express.json())
 app.use('/qubinest',authRouter)
 app.use('/qubinest',attendanceRouter)
-
+app.use(bodyparser())
 app.get('/test', (req, res) => {
     res.send('Hello World! This is a test')
 })
