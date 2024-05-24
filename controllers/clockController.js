@@ -27,7 +27,7 @@ const clockIn = async (req, res) => {
       username,
       date,
       check_in_time,
-      status: 'Approved', // Status set to 'Approved'
+      status: 'Pending', // Status set to 'Approved'
     });
 
     await attendance.save();
