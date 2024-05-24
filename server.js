@@ -11,8 +11,8 @@ const timeSheetRouter=require('./routes/attendanceRouter')
 const bodyparser=require('body-parser')
 const port=process.env.PORT
 const corsOptions = {
-  // origin:' http://localhost:5173',
-  origin:' https://qubinest-frontend.vercel.app',
+  origin:' http://localhost:5173',
+  // origin:' https://qubinest-frontend.vercel.app',
   credentials: true, // This is required to allow credentials (cookies, headers)
 };
 app.use(cors(corsOptions));
@@ -27,5 +27,8 @@ app.get('/test', (req, res) => {
     res.send('Hello World! This is a test')
 })
   
+
+
+
 dbConnection().then(()=>console.log('hello from mongoose')).catch((error)=>console.log('error in db'+error.message))
 app.listen(port,()=>console.log(`listening from port ${port}`))

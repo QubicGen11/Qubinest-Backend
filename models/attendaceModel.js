@@ -37,6 +37,7 @@ const attendanceSchema = new Schema({
         type: Date,
         default: Date.now
     }
+    
 });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema);
