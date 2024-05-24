@@ -11,8 +11,8 @@ const timeSheetRouter=require('./routes/attendanceRouter')
 const bodyparser=require('body-parser')
 const port=process.env.PORT
 const corsOptions = {
-  origin:' http://localhost:5173',
-  // origin:' https://qubinest-frontend.vercel.app',
+  // origin:' http://localhost:5173',
+  origin:' https://qubinest-frontend.vercel.app',
   credentials: true, // This is required to allow credentials (cookies, headers)
 };
 
