@@ -16,10 +16,10 @@ const clockIn = async (req, res) => {
     date.setHours(0, 0, 0, 0);
 
     // Check if the user has already clocked in today
-    const existingAttendance = await Attendance.findOne({ username, date });
-    if (existingAttendance) {
-      return res.status(400).json({ message: 'User already clocked in for today' });
-    }
+    // const existingAttendance = await Attendance.findOne({ username, date });
+    // if (existingAttendance) {
+    //   return res.status(400).json({ message: 'User already clocked in for today' });
+    // }
 
     // Create a new attendance record
     const check_in_time = new Date();
